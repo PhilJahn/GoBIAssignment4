@@ -17,6 +17,7 @@ public class ExonSkip implements Interval{
 	private int start;
 	private int stop;
 	private HashSet<Region> wt_introns;
+	private HashSet<Region> wt_exons;
 	
 	private int minEx;
 	private int maxEx;
@@ -25,10 +26,11 @@ public class ExonSkip implements Interval{
 	private int maxBase;
 	
 	
-	public ExonSkip(HashSet<String> sv_prot, HashSet<String> wt_prot, HashSet<Region> wt_introns, int minEx, int maxEx, int minBase, int maxBase, int start, int stop){
+	public ExonSkip(HashSet<String> sv_prot, HashSet<String> wt_prot, HashSet<Region> wt_introns, HashSet<Region> wt_exons, int minEx, int maxEx, int minBase, int maxBase, int start, int stop){
 		this.sv_prot = sv_prot;
 		this.wt_prot = wt_prot;
 		this.wt_introns = wt_introns;
+		this.wt_exons = wt_exons;
 		
 		this.start = start;
 		this.stop = stop;
@@ -63,6 +65,10 @@ public class ExonSkip implements Interval{
 		return wt_introns;
 		
 	}
+	
+	public HashSet<Region> getWTExons(){
+		return wt_exons;
+	}	
 	
 	public int getMinEx(){
 		return minEx;

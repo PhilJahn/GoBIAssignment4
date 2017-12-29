@@ -37,7 +37,7 @@ public class Psi {
 		}
 		
 		if(gtfPath.equals("") || bamPath.equals("") || outputPath.equals("")){
-			System.out.println("Missing Filepaths");
+			System.out.println("Usage Info:\n-gtf <filepath for GTF>\n-bam <filepath for BAM>\n-o <filepath for ouput>");
 		}
 		else{
 			
@@ -54,7 +54,7 @@ public class Psi {
 			
 			Psi psi = new Psi(gtfFile, bamFile, baiFile);
 		
-			String output = psi.getSkippedExons();
+			String output = psi.getOutput();
 			ArrayList<String> outputAsList = new ArrayList<String>();
 			outputAsList.add(output);
 			try {
@@ -168,93 +168,133 @@ public class Psi {
 	}
 	
 	
-	public String getSkippedExons(){
+	public String getOutput(){
 //		long startTime = System.currentTimeMillis();
 		String tab = "\t";
 		String brk = "\n";
 		char sep = ':';
 		char sip = '|';
-		StringBuilder resultBuilder = new StringBuilder("id\tsymbol\tchr\tstrand\tnprots\tntrans\tSV\tWT\tWT_prots\tSV_prots\tmin_skipped_exon\tmax_skipped_exon\tmin_skipped_bases\tmax_skipped_bases\n");
+		char lin = '-';
+//		StringBuilder resultBuilder = new StringBuilder("id\tsymbol\tchr\tstrand\tnprots\tntrans\tSV\tWT\tWT_exons\tWT_prots\tSV_prots\tmin_skipped_exon\tmax_skipped_exon\tmin_skipped_bases\tmax_skipped_bases\n");
+
+		StringBuilder resultBuilder = new StringBuilder("gene\texon\tnum_incl_reads\tnum_excl_reads\tnum_total_reads\tpsi\n");
+
 		for (Integer key: geneSet.keySet()) {
 			Gene curGene = geneSet.get(key);
 			Annotation curGAnno = curGene.getAnnotation();
 //			System.out.println("getExonSkips");
 			ArrayList<ExonSkip> skips = curGene.getExonSkips();
-//			System.out.println("gotExonSkips");
-			int tn = curGene.getTranscriptNumber();
-			int pn = curGene.getProteinNumber();
+			
+//			printExonSkip(resultBuilder, curGene, curGAnno, skips, tab, brk, sep, sip);
 			
 			String geneid = curGAnno.getId();
-			String genename = curGAnno.getName();
 			String chr = curGAnno.getChromosome();
-			char str = curGAnno.getStrand();
-			
-			StringBuilder geneInfo = new StringBuilder(geneid);
-			geneInfo.append(tab);
-			geneInfo.append(genename);
-			geneInfo.append(tab);
-			geneInfo.append(chr);
-			geneInfo.append(tab);
-			geneInfo.append(str);
-			geneInfo.append(tab);
-			geneInfo.append(tn);
-			geneInfo.append(tab);
-			geneInfo.append(pn);
-			geneInfo.append(tab);
 			
 			for(ExonSkip skip: skips){
-				resultBuilder.append(geneInfo);
-				resultBuilder.append(skip.getStart());
-				resultBuilder.append(sep);
-				resultBuilder.append(skip.getStop());
-				resultBuilder.append(tab);
-				
-				ArrayList<Region> introns = new ArrayList<Region>(skip.getWTIntrons());
-				introns.sort(new StartRegionComparator());
-				resultBuilder.append(introns.get(0).getStart());
-				resultBuilder.append(sep);
-				resultBuilder.append(introns.get(0).getStop());
-				for(int i = 1; i < introns.size(); i++ ){
-					Region curIntron = introns.get(i);
-					resultBuilder.append(sip);
-					resultBuilder.append(curIntron.getStart());
-					resultBuilder.append(sep);
-					resultBuilder.append(curIntron.getStop());
+				ArrayList<Region> exons = new ArrayList<Region>(skip.getWTExons());
+				exons.sort(new StartRegionComparator());
+				for( Region exon : exons){
+					resultBuilder.append(geneid);
+					resultBuilder.append(tab);
+					resultBuilder.append(exon.getStart());
+					resultBuilder.append(lin);
+					resultBuilder.append(exon.getStop()+1);
+					resultBuilder.append(brk);
 				}
-				resultBuilder.append(tab);
-				
-				ArrayList<String> wt = new ArrayList<String>(skip.getWTProt());
-				resultBuilder.append(wt.get(0));
-				for(int i = 1; i < wt.size(); i++ ){
-					resultBuilder.append(sip);					
-					resultBuilder.append(wt.get(i));
-				}
-				resultBuilder.append(tab);
-				
-				ArrayList<String> sv = new ArrayList<String>(skip.getSVProt());
-				resultBuilder.append(sv.get(0));
-				for(int i = 1; i < sv.size(); i++ ){
-					resultBuilder.append(sip);					
-					resultBuilder.append(sv.get(i));
-				}
-				resultBuilder.append(tab);
-				
-				resultBuilder.append(skip.getMinEx());
-				resultBuilder.append(tab);
-				resultBuilder.append(skip.getMaxEx());
-				resultBuilder.append(tab);
-				resultBuilder.append(skip.getMinBase());
-				resultBuilder.append(tab);
-				resultBuilder.append(skip.getMaxBase());
-				resultBuilder.append(brk);
-			
 			}
+			
 		}
 //		long stopTime = System.currentTimeMillis();
 //		System.out.println("Skips:" + (stopTime-startTime));
 		return resultBuilder.toString();
 	}
 	
+	public void printExonSkip(StringBuilder resultBuilder, Gene curGene, Annotation curGAnno, ArrayList<ExonSkip> skips, String tab, String brk, char sep, char sip){
+
+		//		System.out.println("gotExonSkips");
+		int tn = curGene.getTranscriptNumber();
+		int pn = curGene.getProteinNumber();
+		
+		String geneid = curGAnno.getId();
+		String genename = curGAnno.getName();
+		String chr = curGAnno.getChromosome();
+		char str = curGAnno.getStrand();
+		
+		StringBuilder geneInfo = new StringBuilder(geneid);
+		geneInfo.append(tab);
+		geneInfo.append(genename);
+		geneInfo.append(tab);
+		geneInfo.append(chr);
+		geneInfo.append(tab);
+		geneInfo.append(str);
+		geneInfo.append(tab);
+		geneInfo.append(tn);
+		geneInfo.append(tab);
+		geneInfo.append(pn);
+		geneInfo.append(tab);
+		
+		for(ExonSkip skip: skips){
+			resultBuilder.append(geneInfo);
+			resultBuilder.append(skip.getStart());
+			resultBuilder.append(sep);
+			resultBuilder.append(skip.getStop());
+			resultBuilder.append(tab);
+			
+			ArrayList<Region> introns = new ArrayList<Region>(skip.getWTIntrons());
+			introns.sort(new StartRegionComparator());
+			resultBuilder.append(introns.get(0).getStart());
+			resultBuilder.append(sep);
+			resultBuilder.append(introns.get(0).getStop());
+			for(int i = 1; i < introns.size(); i++ ){
+				Region curIntron = introns.get(i);
+				resultBuilder.append(sip);
+				resultBuilder.append(curIntron.getStart());
+				resultBuilder.append(sep);
+				resultBuilder.append(curIntron.getStop());
+			}
+			resultBuilder.append(tab);
+			
+			ArrayList<Region> exons = new ArrayList<Region>(skip.getWTExons());
+			exons.sort(new StartRegionComparator());
+			resultBuilder.append(exons.get(0).getStart());
+			resultBuilder.append(sep);
+			resultBuilder.append(exons.get(0).getStop());
+			for(int i = 1; i < exons.size(); i++ ){
+				Region curExon = exons.get(i);
+				resultBuilder.append(sip);
+				resultBuilder.append(curExon.getStart());
+				resultBuilder.append(sep);
+				resultBuilder.append(curExon.getStop());
+			}
+			resultBuilder.append(tab);
+			
+			ArrayList<String> wt = new ArrayList<String>(skip.getWTProt());
+			resultBuilder.append(wt.get(0));
+			for(int i = 1; i < wt.size(); i++ ){
+				resultBuilder.append(sip);					
+				resultBuilder.append(wt.get(i));
+			}
+			resultBuilder.append(tab);
+			
+			ArrayList<String> sv = new ArrayList<String>(skip.getSVProt());
+			resultBuilder.append(sv.get(0));
+			for(int i = 1; i < sv.size(); i++ ){
+				resultBuilder.append(sip);					
+				resultBuilder.append(sv.get(i));
+			}
+			resultBuilder.append(tab);
+			
+			resultBuilder.append(skip.getMinEx());
+			resultBuilder.append(tab);
+			resultBuilder.append(skip.getMaxEx());
+			resultBuilder.append(tab);
+			resultBuilder.append(skip.getMinBase());
+			resultBuilder.append(tab);
+			resultBuilder.append(skip.getMaxBase());
+			resultBuilder.append(brk);
+		
+		}
+	}
 	
 	public ArrayList<Gene> getGenes(){
 		ArrayList<Gene> result = new ArrayList<Gene>();

@@ -155,6 +155,7 @@ public class Gene extends Region{
 			
 			HashSet<Region> wt_skips = new HashSet<Region>();
 			
+			HashSet<Region> wt_exons = new HashSet<Region>();
 			
 //			System.out.println("Transcript IDs " + wt_transcript_ids);
 			
@@ -162,11 +163,19 @@ public class Gene extends Region{
 				Transcript wt_transcript = transcripts.get(id);
 				HashSet<Region> wt_id_skips = new HashSet<Region>();
 				wt_id_skips = wt_transcript.getIntrons().getIntervalsSpannedBy(svstart, svstop, wt_id_skips);
+				
+				HashSet<Region> wt_id_exons = new HashSet<Region>();
+				wt_id_exons = wt_transcript.getRegionsTree().getIntervalsSpannedBy(svstart, svstop, wt_id_exons);
+				
 				int ex = wt_id_skips.size()-1;
 				maxEx = Math.max(maxEx, ex);
 				minEx = Math.min(minEx, ex);
 				
 				int base = svstop-svstart;
+				for(Region wt_exon: wt_id_exons){	
+					wt_exons.add(wt_exon);
+					
+				}
 				for(Region wt_skip: wt_id_skips){
 					HashSet<String> wt_skip_prot = new HashSet<String>();
 					base -= wt_skip.length();
@@ -186,7 +195,7 @@ public class Gene extends Region{
 			}
 			
 
-			ExonSkip skip = new ExonSkip(sv.getAnnotation().getIds(),wt_prot_ids,wt_skips,minEx,maxEx,minBase,maxBase, svstart, svstop);
+			ExonSkip skip = new ExonSkip(sv.getAnnotation().getIds(),wt_prot_ids,wt_skips,wt_exons,minEx,maxEx,minBase,maxBase, svstart, svstop);
 			skips.add(skip);
 			}
 		}
