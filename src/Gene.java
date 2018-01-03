@@ -166,7 +166,7 @@ public class Gene extends Region{
 				
 				HashSet<Region> wt_id_exons = new HashSet<Region>();
 				wt_id_exons = wt_transcript.getRegionsTree().getIntervalsSpannedBy(svstart, svstop, wt_id_exons);
-				
+				wt_transcript.getIntrons().
 				int ex = wt_id_skips.size()-1;
 				maxEx = Math.max(maxEx, ex);
 				minEx = Math.min(minEx, ex);

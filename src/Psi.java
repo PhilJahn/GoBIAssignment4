@@ -12,7 +12,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Vector;
+
+import net.sf.samtools.*;
 
 public class Psi {
 
@@ -69,8 +72,14 @@ public class Psi {
 
 	private HashMap<Integer,Gene> geneSet;
 	
+	private SAMFileReader bam_reader;
+	
 	public Psi (File gtfFile, File bamFile, File baiFile) {
 //		long startTime = System.currentTimeMillis();
+		
+		bam_reader = new SAMFileReader(bamFile,baiFile);
+		bam_reader.setValidationStringency(SAMFileReader.ValidationStringency.SILENT);
+		
 		geneSet = new HashMap<Integer,Gene>();
 	    try {
 	        BufferedReader br = new BufferedReader (new FileReader(gtfFile));
@@ -179,6 +188,12 @@ public class Psi {
 
 		StringBuilder resultBuilder = new StringBuilder("gene\texon\tnum_incl_reads\tnum_excl_reads\tnum_total_reads\tpsi\n");
 
+		String keyString = "ENSG00000158109.10";
+		int keyInt = keyString.hashCode();
+		Gene gene = geneSet.get(keyInt);
+		geneSet.clear();
+		geneSet.put(keyInt, gene);
+		
 		for (Integer key: geneSet.keySet()) {
 			Gene curGene = geneSet.get(key);
 			Annotation curGAnno = curGene.getAnnotation();
@@ -199,8 +214,73 @@ public class Psi {
 					resultBuilder.append(exon.getStart());
 					resultBuilder.append(lin);
 					resultBuilder.append(exon.getStop()+1);
+					
+					Iterator<SAMRecord> exon_iterator = bam_reader.queryOverlapping(chr, exon.getStart(), exon.getStop());
+					
+					int c = 0;
+					int d = 0;
+					
+					HashSet<String> ids = new HashSet<String>();
+					
+					while(exon_iterator.hasNext()){
+						SAMRecord curRec = exon_iterator.next();
+						if(ids.add(curRec.getReadName())){
+							c++;
+							System.out.print(curRec.getReadName() + "\t");
+							java.util.List<AlignmentBlock> blocks = curRec.getAlignmentBlocks();
+							Iterator<AlignmentBlock> blockIterator = blocks.iterator();
+							int blockStart = 0;
+							if(blockIterator.hasNext()){
+								blockStart = blockIterator.next().getReferenceStart();
+								System.out.print(blockStart);
+								if(blockStart >= exon.getStart() && blockStart <= exon.getStop()){
+									d++;
+								}
+							}
+							while(blockIterator.hasNext()){
+								blockStart = blockIterator.next().getReferenceStart();
+								System.out.print("|" + blockStart);
+								if(blockStart >= exon.getStart() && blockStart <= exon.getStop()){
+									d++;
+								}
+							}
+							System.out.println("");
+						}
+						else{
+							
+						}
+					}
+					
+					
+					
+					resultBuilder.append(tab);
+					resultBuilder.append(d);
+					
+					int e = c-d;
+					resultBuilder.append(tab);
+					resultBuilder.append(e);
+					
+					resultBuilder.append(tab);
+					resultBuilder.append(c);
+					
+//					int f = 0;
+//					Iterator<SAMRecord>  exon_iterator_in = bam_reader.query(chr, exon.getStart(), exon.getStop()+1, true);
+//					
+//					ids.clear();
+//					
+//					while(exon_iterator_in.hasNext()){
+//						SAMRecord curRec = exon_iterator_in.next();
+//						if(ids.add(curRec.getReadName())){
+//							f++;
+//						}
+//					}
+					
+//					resultBuilder.append(tab);
+//					resultBuilder.append(f);
+					
 					resultBuilder.append(brk);
 				}
+				
 			}
 			
 		}
