@@ -2,12 +2,8 @@ LRS <- function(incl, total, group){
 
   coln <- length(group)
   
-  inc <- integer(coln)
-  tot <- integer(coln)
-  gr <- integer(coln)
-  
-  inc0 <- 0
-  tot0 <- 0
+  inc0 <- sum(incl)
+  tot0 <- sum(total)
   
   inc1 <- 0
   tot1 <- 0
@@ -16,11 +12,8 @@ LRS <- function(incl, total, group){
   tot2 <- 0
   
   for(i in 1:coln){
-    inci <- sum(incl[,i])
-    toti <- sum(total[,i])
-    
-    inc0 <- inc0 + inci
-    tot0 <- tot0 + toti
+    inci <- incl[i]
+    toti <- total[i]
     
     if(group[i] == 1){
       inc1 <- inc1 + inci
@@ -30,9 +23,7 @@ LRS <- function(incl, total, group){
       inc2 <- inc2 + inci
       tot2 <- tot2 + toti    
     }
-    
-    inc[i] <- inci
-    tot[i] <- toti
+
   }
   
   p0 <- inc0/tot0
@@ -43,8 +34,8 @@ LRS <- function(incl, total, group){
   llfull <- 0
   
   for(j in 1:coln){
-    incj <- inc[j]
-    totj <- tot[j]
+    incj <- incl[j]
+    totj <- total[j]
     llreduced <- llreduced + log(dbinom(incj,totj,p0))
     
     if(group[j] == 1){
@@ -59,7 +50,7 @@ LRS <- function(incl, total, group){
   
   pvalue <- pchisq(lrs, df=1, lower.tail=FALSE)
   
-  result <- list(inc = inc, tot = tot, p0 = p0, p1 = p1, p2=p2, llreduced = llreduced, llfull = llfull, lrs = lrs, pvalue = pvalue)
+  result <- list(p0 = p0, p1 = p1, p2=p2, llreduced = llreduced, llfull = llfull, lrs = lrs, pvalue = pvalue)
   return(result)
 }
 
@@ -72,13 +63,20 @@ diff.splicing <- function(psi.files, group){
   total <- matrix(file$num_total_reads)
   output <- data.frame(gene = file$gene,exon = file$exon)
   
+  exonCount <- length(incl)
+  
   for(i in 2:filecount){
     file <- read.table(psi.files[i],header=TRUE, sep="\t")
     incl <- cbind(incl, file$num_incl_reads)
     total <- cbind(total, file$num_total_reads)
   }
   
-  lrs <- LRS(incl,total,group)
+  lrs <- data.frame(LRS(incl[1,],total[1,],group))
+  
+  for(i in 2:exonCount){
+    lrs <- rbind(lrs,LRS(incl[i,],total[i,],group))
+  }
+  
   output <- cbind(output,lrs)
   
   pValue <- lrs$pvalue
