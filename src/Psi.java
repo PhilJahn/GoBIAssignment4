@@ -194,6 +194,39 @@ public class Psi {
 		geneSet.clear();
 		geneSet.put(keyInt, gene);
 		
+		Iterator<SAMRecord> bam_it = bam_reader.iterator();
+				
+		HashMap<String,Integer> bam_ids = new HashMap<String,Integer>();
+		
+		while(bam_it.hasNext()){
+			SAMRecord samr = bam_it.next();
+			
+			Integer x =bam_ids.put(samr.getReadName(), 1);
+			if(x != null){
+				bam_ids.put(samr.getReadName(), (1+x));
+			}
+			
+		}
+		
+		bam_it.;
+		
+		Iterator<SAMRecord> bam_it_2 = bam_reader.iterator();
+		while(bam_it_2.hasNext()){
+			SAMRecord samr = bam_it_2.next();
+			
+			Integer x =bam_ids.put(samr.getReadName(), 1);
+			if(x != null){
+				bam_ids.put(samr.getReadName(), (1+x));
+			}
+			
+		}		
+		
+		
+		
+		for(String id: bam_ids.keySet()){
+			System.out.println(id + ": " + bam_ids.get(id));
+		}
+		
 		for (Integer key: geneSet.keySet()) {
 			Gene curGene = geneSet.get(key);
 			Annotation curGAnno = curGene.getAnnotation();
@@ -215,41 +248,39 @@ public class Psi {
 					resultBuilder.append(lin);
 					resultBuilder.append(exon.getStop()+1);
 					
-					Iterator<SAMRecord> exon_iterator = bam_reader.queryOverlapping(chr, exon.getStart(), exon.getStop());
-					
 					int c = 0;
 					int d = 0;
 					
 					HashSet<String> ids = new HashSet<String>();
 					
-					while(exon_iterator.hasNext()){
-						SAMRecord curRec = exon_iterator.next();
-						if(ids.add(curRec.getReadName())){
-							c++;
-							System.out.print(curRec.getReadName() + "\t");
-							java.util.List<AlignmentBlock> blocks = curRec.getAlignmentBlocks();
-							Iterator<AlignmentBlock> blockIterator = blocks.iterator();
-							int blockStart = 0;
-							if(blockIterator.hasNext()){
-								blockStart = blockIterator.next().getReferenceStart();
-								System.out.print(blockStart);
-								if(blockStart >= exon.getStart() && blockStart <= exon.getStop()){
-									d++;
-								}
-							}
-							while(blockIterator.hasNext()){
-								blockStart = blockIterator.next().getReferenceStart();
-								System.out.print("|" + blockStart);
-								if(blockStart >= exon.getStart() && blockStart <= exon.getStop()){
-									d++;
-								}
-							}
-							System.out.println("");
-						}
-						else{
-							
-						}
-					}
+//					while(exon_iterator.hasNext()){
+//						SAMRecord curRec = exon_iterator.next();
+//						if(ids.add(curRec.getReadName())){
+//							c++;
+//							System.out.print(curRec.getReadName() + "\t");
+//							java.util.List<AlignmentBlock> blocks = curRec.getAlignmentBlocks();
+//							Iterator<AlignmentBlock> blockIterator = blocks.iterator();
+//							int blockStart = 0;
+//							if(blockIterator.hasNext()){
+//								blockStart = blockIterator.next().getReferenceStart();
+//								System.out.print(blockStart);
+//								if(blockStart >= exon.getStart() && blockStart <= exon.getStop()){
+//									d++;
+//								}
+//							}
+//							while(blockIterator.hasNext()){
+//								blockStart = blockIterator.next().getReferenceStart();
+//								System.out.print("|" + blockStart);
+//								if(blockStart >= exon.getStart() && blockStart <= exon.getStop()){
+//									d++;
+//								}
+//							}
+//							System.out.println("");
+//						}
+//						else{
+//							
+//						}
+//					}
 					
 					
 					

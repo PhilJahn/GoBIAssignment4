@@ -1,5 +1,5 @@
 LRS <- function(incl, total, group){
-
+  
   coln <- length(group)
   
   inc0 <- sum(incl)
@@ -58,18 +58,31 @@ diff.splicing <- function(psi.files, group){
   
   filecount <- length(psi.files)
 
-  file <- read.table(psi.files[1],header=TRUE, sep="\t")
-  incl <- matrix(file$num_incl_reads)
-  total <- matrix(file$num_total_reads)
-  output <- data.frame(gene = file$gene,exon = file$exon)
+  file <- read.table(psi.files[1],header=TRUE, sep="\t",stringsAsFactors=FALSE)
   
-  exonCount <- length(incl)
+  content <- data.frame(gene = file$gene,exon = file$exon, incl1= file$num_incl_reads, total1 = file$num_total_reads)
   
   for(i in 2:filecount){
     file <- read.table(psi.files[i],header=TRUE, sep="\t")
-    incl <- cbind(incl, file$num_incl_reads)
-    total <- cbind(total, file$num_total_reads)
+
+    
+    newcontent <- data.frame(gene = file$gene, exon =file$exon, file$num_incl_reads, file$num_total_reads)
+    colnames(newcontent)[3] <- paste("incl",i, sep="")
+    colnames(newcontent)[4] <- paste("total",i, sep="")
+    
+    content <- merge(content, newcontent, by=c("gene","exon"), all=TRUE)
   }
+  
+  content[is.na(content)] <- 0
+  
+  exonCount <- nrow(content)
+  
+  incl <- content[seq(3, ncol(content), 2)]
+  
+  incl <- sapply(incl, as.numeric)
+  
+  total <- content[seq(4, ncol(content), 2)]
+  total <- sapply(total, as.numeric)
   
   lrs <- data.frame(LRS(incl[1,],total[1,],group))
   
@@ -77,11 +90,11 @@ diff.splicing <- function(psi.files, group){
     lrs <- rbind(lrs,LRS(incl[i,],total[i,],group))
   }
   
+  output <- data.frame(content[1],content[2])
+  
   output <- cbind(output,lrs)
   
-  pValue <- lrs$pvalue
-  padj <- p.adjust(pValue)
-  output <- cbind(output,padj)
+  output <- cbind(output, padj=p.adjust(output$pvalue, method = "BH"))
 
   return(output)
 }
