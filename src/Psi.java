@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
 
+import AugmentedTree.IntervalTree;
 import net.sf.samtools.*;
 
 public class Psi {
@@ -194,38 +195,34 @@ public class Psi {
 		geneSet.clear();
 		geneSet.put(keyInt, gene);
 		
-		Iterator<SAMRecord> bam_it = bam_reader.iterator();
-				
-		HashMap<String,Integer> bam_ids = new HashMap<String,Integer>();
+		SAMRecordIterator bam_it = bam_reader.iterator();
+
+		HashMap<String,SAMRecord> store = new HashMap<String,SAMRecord>();
+		
+		IntervalTree<Read> reads = new IntervalTree<Read>();
 		
 		while(bam_it.hasNext()){
 			SAMRecord samr = bam_it.next();
 			
-			Integer x =bam_ids.put(samr.getReadName(), 1);
-			if(x != null){
-				bam_ids.put(samr.getReadName(), (1+x));
-			}
+			boolean ignore = samr.getNotPrimaryAlignmentFlag() || samr.getReadUnmappedFlag() || samr.getMateUnmappedFlag() || (samr.getMateNegativeStrandFlag() == samr.getReadNegativeStrandFlag());
 			
+			boolean inPair = samr.getFirstOfPairFlag()||samr.getSecondOfPairFlag();
+			
+			if(inPair && !ignore){
+				String readname = samr.getReadName();
+				if(store.containsKey(readname) && readname.equals("89450")){
+					System.out.println(readname);
+					reads.add(new Read(samr, store.get(readname)));
+					store.remove(readname);
+				}
+				else{
+					store.put(readname, samr);
+				}
+			}
+
 		}
 		
-		bam_it.;
-		
-		Iterator<SAMRecord> bam_it_2 = bam_reader.iterator();
-		while(bam_it_2.hasNext()){
-			SAMRecord samr = bam_it_2.next();
-			
-			Integer x =bam_ids.put(samr.getReadName(), 1);
-			if(x != null){
-				bam_ids.put(samr.getReadName(), (1+x));
-			}
-			
-		}		
-		
-		
-		
-		for(String id: bam_ids.keySet()){
-			System.out.println(id + ": " + bam_ids.get(id));
-		}
+		bam_it.close();
 		
 		for (Integer key: geneSet.keySet()) {
 			Gene curGene = geneSet.get(key);
