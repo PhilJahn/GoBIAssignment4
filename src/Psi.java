@@ -198,7 +198,7 @@ public class Psi {
 		SAMRecordIterator bam_it = bam_reader.iterator();
 
 		HashMap<String,SAMRecord> store = new HashMap<String,SAMRecord>();
-		
+		HashMap<String,Integer> count = new HashMap<String,Integer>();
 		IntervalTree<Read> reads = new IntervalTree<Read>();
 		
 		while(bam_it.hasNext()){
@@ -210,8 +210,13 @@ public class Psi {
 			
 			if(inPair && !ignore){
 				String readname = samr.getReadName();
-				if(store.containsKey(readname) && readname.equals("89450")){
-					System.out.println(readname);
+//				&& readname.equals("87178")	
+//				Integer x= count.put(readname,1);
+//				if(x != null){
+//					count.put(readname, x+1);
+//				}
+				if(store.containsKey(readname)&& readname.equals("87178")){
+//					System.out.println(readname);
 					reads.add(new Read(samr, store.get(readname)));
 					store.remove(readname);
 				}
@@ -219,9 +224,7 @@ public class Psi {
 					store.put(readname, samr);
 				}
 			}
-
 		}
-		
 		bam_it.close();
 		
 		for (Integer key: geneSet.keySet()) {

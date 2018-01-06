@@ -11,6 +11,11 @@ public class RegionBlock implements Interval{
 	}
 	
 	@Override
+	public String toString(){
+		return (start + ":" +stop);
+	}
+	
+	@Override
 	public int getStart() {
 		return start;
 	}
