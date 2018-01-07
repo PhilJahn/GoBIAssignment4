@@ -2,8 +2,8 @@ import AugmentedTree.Interval;
 
 public class RegionBlock implements Interval{
 
-	int start;
-	int stop;
+	private int start;
+	private int stop;
 	
 	public RegionBlock(int start,int stop){
 		this.start = start;

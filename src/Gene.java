@@ -38,11 +38,11 @@ public class Gene extends Region{
 		transcripts = new HashMap <String,Transcript>();
 	}
 
-	public Gene(int x1, int x2, Annotation annotation, Annotation subannotation){
-		super(x1,x2,annotation);
-		transcripts = new HashMap <String,Transcript>();
-		transcripts.put(subannotation.getId(),new Transcript(x1,x2,subannotation));
-	}
+//	public Gene(int x1, int x2, Annotation annotation, Annotation subannotation){
+//		super(x1,x2,annotation);
+//		transcripts = new HashMap <String,Transcript>();
+//		transcripts.put(subannotation.getId(),new Transcript(x1,x2,subannotation));
+//	}
 
 	public int getTranscriptNumber(){
 		int n = 0;
@@ -235,6 +235,22 @@ public class Gene extends Region{
 	    {
 	        return x1.getStart() - x2.getStart();
 	    }
+	}
+
+	public boolean inTranscript(Read curRead) {
+		boolean transcriptomic = false;
+		if(curRead.getReadName().equals("135")){
+			System.out.println("135");
+		}
+		for( String k : transcripts.keySet() ){
+			if(!transcriptomic){
+				transcriptomic |= transcripts.get(k).inTranscript(curRead);
+			}
+		}
+		if(curRead.getReadName().equals("135")){
+			System.out.println(transcriptomic);
+		}
+		return transcriptomic;
 	}
 }
 

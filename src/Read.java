@@ -13,14 +13,20 @@ import net.sf.samtools.*;
 
 public class Read implements Interval{
 
-	int start;
-	int stop;
-	String readname;
+	private int start;
+	private int stop;
+	private String readname;
 	//false =forward, true = reverse
-	boolean strand;
-	boolean incons;
+	private char strand;
+	private String chr;
+	private boolean incons;
 	
-	IntervalTree<RegionBlock> alignment_blocks;
+	private IntervalTree<RegionBlock> alignment_blocks;
+	
+	private ArrayList<RegionBlock> exons_fop;
+	private ArrayList<RegionBlock> exons_sop;
+	
+	private ArrayList<RegionBlock> introns;
 	
 	public Read(SAMRecord samRecord1, SAMRecord samRecord2) {
 		SAMRecord fop;
@@ -40,7 +46,15 @@ public class Read implements Interval{
 		int o_stop = Math.min(fop.getAlignmentEnd(), sop.getAlignmentEnd());
 		
 		readname = fop.getReadName();
-		strand = fop.getReadNegativeStrandFlag();
+		
+		chr = fop.getReferenceName();
+		
+		if(fop.getReadNegativeStrandFlag()){
+			strand = '-';
+		}
+		else{
+			strand = '+';
+		}
 		
 		ArrayList<RegionBlock> exons_fop = new ArrayList<RegionBlock>();
 		for (AlignmentBlock block : fop.getAlignmentBlocks()){
@@ -72,11 +86,15 @@ public class Read implements Interval{
 		
 //		exons_sop.clear();
 //		
-//		exons_sop.add(new RegionBlock(114357090, 114357336));
+//		exons_sop.add(new RegionBlock(114357290, 114357336));
 //		exons_sop.add(new RegionBlock(114357090, 114357168));
 //		exons_sop.add(new RegionBlock(114347890, 114347902));
 		
 		exons_sop.sort(new RegionBlockComparator());
+		
+		this.exons_fop = exons_fop;
+		this.exons_sop = exons_sop;
+		this.introns = introns;
 		
 		for(int i =1 ; i < exons_sop.size(); i++){
 			int start = exons_sop.get(i-1).getStop();
@@ -88,23 +106,25 @@ public class Read implements Interval{
 		exons.addAll(exons_sop);
 		exons.addAll(exons_fop);
 		
+		incons = false;
+		
 		for( RegionBlock intron : introns){
 			if(intron.getStart() <= o_stop && intron.getStop() > o_start){
 				
-				System.out.println(intron);
+//				System.out.println(intron);
 				
 				HashSet<RegionBlock> cont = new HashSet<RegionBlock>();
-				cont = exons.getIntervalsIntersecting(intron.getStart()+1, intron.getStop()-1, cont);
+				cont = exons.getIntervalsIntersecting(intron.getStart(), intron.getStop()-1, cont);
 				ArrayList<RegionBlock> bord = new ArrayList<RegionBlock>();
-				bord =exons.getIntervalsIntersecting(intron.getStart(), intron.getStop(), bord);
+				bord =exons.getIntervalsIntersecting(intron.getStart()-1, intron.getStop(), bord);
 				
 				if(cont.size() != 0){
-					System.out.println("cont " + cont.size());
+//					System.out.println("cont " + cont.size());
 					incons = true;
 				}
 				
 				if(bord.size() != 4){
-					System.out.println("bord " + bord.size());
+//					System.out.println("bord " + bord.size());
 					incons = true;
 				}
 			}
@@ -123,16 +143,44 @@ public class Read implements Interval{
 			
 			alignment_blocks.add(new RegionBlock(start,stop));
 		}
-		if(incons){
-			System.out.println("FoP: " + exons_fop.toString());
-			System.out.println("SoP: " + exons_sop.toString());
-			
-			System.out.println("Intron: " + introns.toString());
-			
-			System.out.println("Ges: "+ this.start + ":" + this.stop);
-			System.out.println("Other: " + o_start + ":" + o_stop);
-			System.out.println(alignment_blocks.toTreeString());
-		}
+//		if(incons){
+//			System.out.println(readname);
+//			System.out.println("FoP: " + exons_fop.toString());
+//			System.out.println("SoP: " + exons_sop.toString());
+//			
+//			System.out.println("Intron: " + introns.toString());
+//			
+//			System.out.println("Ges: "+ this.start + ":" + this.stop);
+//			System.out.println("Other: " + o_start + ":" + o_stop);
+//			System.out.println(alignment_blocks.toTreeString());
+//		}
+	}
+	
+	public String toString(){
+		String tab = "\t";
+		String brk = "\n";
+		char sep = ':';
+		char sip = '|';
+		char lin = '-';
+		StringBuilder resultBuilder = new StringBuilder();
+		resultBuilder.append(readname);
+		resultBuilder.append(tab);
+		resultBuilder.append(start);
+		resultBuilder.append(sep);
+		resultBuilder.append(stop);
+		resultBuilder.append(tab);
+		resultBuilder.append(incons);
+		resultBuilder.append(tab);
+		resultBuilder.append(strand);
+		resultBuilder.append(tab);
+		ArrayList<RegionBlock> blocks= new ArrayList<RegionBlock>(alignment_blocks);
+		resultBuilder.append(blocks.toString());
+		resultBuilder.append(tab);
+		resultBuilder.append(exons_fop.toString());
+		resultBuilder.append(tab);
+		resultBuilder.append(exons_sop.toString());
+		
+		return resultBuilder.toString();
 	}
 
 	@Override
@@ -143,6 +191,38 @@ public class Read implements Interval{
 	@Override
 	public int getStop() {
 		return stop;
+	}
+	
+	public String getReadName(){
+		return readname;
+	}
+	
+	public IntervalTree<RegionBlock> getAlignmentBlocks(){
+		return alignment_blocks;
+	}
+	
+	public ArrayList<RegionBlock> getAlignmentBlocksFoP(){
+		return exons_fop;
+	}
+	
+	public ArrayList<RegionBlock> getAlignmentBlocksSoP(){
+		return exons_sop;
+	}
+	
+	public ArrayList<RegionBlock> getIntronBlocks(){
+		return introns;
+	}
+	
+	public boolean isConsistent(){
+		return !incons;
+	}
+	
+	public String getChromosome(){
+		return chr;
+	}
+	
+	public char getStrand(){
+		return strand;
 	}
 
 	class RegionBlockComparator implements Comparator<RegionBlock>
