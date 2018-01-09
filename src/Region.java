@@ -55,7 +55,7 @@ public class Region implements Interval {
     
     @Override
     public String toString(){
-		return start + ":" + stop + " " + annotation.toString();
+		return start + ":" + stop;
     	
     }
     

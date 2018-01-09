@@ -7,9 +7,12 @@ import AugmentedTree.IntervalTree;
 public class Transcript extends RegionVector{
 	
 	private IntervalTree<Region> introns; 
+	
+	private IntervalTree<RegionBlock> exons; 
 
 	public Transcript(int start, int stop, Annotation annotation)  {
 		super(start, stop, annotation);
+		exons= new IntervalTree<RegionBlock>();
 	}
 	
 	public int getProtNum(){
@@ -49,6 +52,10 @@ public class Transcript extends RegionVector{
 		return this.getAnnotation().equals(t.getAnnotation());
 	}
 	
+	public boolean add(RegionBlock exon){
+		return exons.add(exon);
+	}
+	
 	public int hashCode(){
 		return this.getAnnotation().hashCode();
 	}
@@ -66,42 +73,41 @@ public class Transcript extends RegionVector{
 		ArrayList<RegionBlock> exonsfop = curRead.getAlignmentBlocksFoP();
 		ArrayList<RegionBlock> exonssop = curRead.getAlignmentBlocksSoP();
 		ArrayList<RegionBlock> intronsR = curRead.getIntronBlocks();
-		IntervalTree<Region> regions = this.getRegionsTree();
 		
-		if(curRead.getReadName().equals("135")){
-			System.out.println("135");
-			System.out.println(this.getRegions().toString());
-			System.out.println(exonsfop.toString());
-			System.out.println(exonssop.toString());
-			System.out.println(intronsR.toString());
-		}
+//		if(curRead.getReadName().equals("67182")){
+//			System.out.println("67182");
+//			System.out.println(this.exons.toString());
+//			System.out.println("FOP " + exonsfop.toString());
+//			System.out.println("SOP " +exonssop.toString());
+//			System.out.println("Intron " +intronsR.toString());
+//		}
 		
 		in = inTranscriptExon(exonsfop);
-		if(curRead.getReadName().equals("135")){
-			System.out.println("FOP " + in);
-		}
+//		if(curRead.getReadName().equals("67182")){
+//			System.out.println("FOP " + in);
+//		}
 		if(in){
 			in = inTranscriptExon(exonssop);
-			if(curRead.getReadName().equals("135")){
-				System.out.println("SOP " + in);
-			}
+//			if(curRead.getReadName().equals("67182")){
+//				System.out.println("SOP " + in);
+//			}
 		}
 		
 		
 		if(in && intronsR.size() > 0){
-			HashSet<Region> cont;
+			HashSet<RegionBlock> cont;
 			for(RegionBlock intron: intronsR){
-				cont = regions.getIntervalsSpannedBy(intron.getStart()-1,intron.getStop()-1, new HashSet<Region>());
+				cont = exons.getIntervalsSpannedBy(intron.getStart()-1,intron.getStop()-1, new HashSet<RegionBlock>());
 				if(cont.size() != 0){
-					if(curRead.getReadName().equals("135")){
-						System.out.println("Intron " + false);
-					}
+//					if(curRead.getReadName().equals("67182")){
+//						System.out.println("Intron " + false);
+//					}
 					return false;
 				}
 			}
-			if(curRead.getReadName().equals("135")){
-				System.out.println("Intron " + in);
-			}
+//			if(curRead.getReadName().equals("67182")){
+//				System.out.println("Intron " + in);
+//			}
 		}
 		
 		
@@ -110,14 +116,13 @@ public class Transcript extends RegionVector{
 	
 	private boolean inTranscriptExon(ArrayList<RegionBlock> exons){
 		boolean in = true;
-		ArrayList<Region> cont;
+		ArrayList<RegionBlock> cont;
 		
-		IntervalTree<Region> regions = this.getRegionsTree();
 		
 		RegionBlock curExon = exons.get(0);
 		
 		if(exons.size() > 1){
-			cont = regions.getIntervalsEndAt(curExon.getStop()-1, new ArrayList<Region>());
+			cont = this.exons.getIntervalsEndAt(curExon.getStop()-1, new ArrayList<RegionBlock>());
 			if(cont.size() > 0){
 				in &= cont.get(0).getStart() <= curExon.getStart();
 			}
@@ -127,13 +132,13 @@ public class Transcript extends RegionVector{
 			for(int i = 1; i < exons.size()-1; i++){
 				if(in){
 					curExon = exons.get(i);
-					cont = regions.getIntervalsEqual(curExon.getStart(),curExon.getStop()-1, new ArrayList<Region>());
+					cont = this.exons.getIntervalsEqual(curExon.getStart(),curExon.getStop()-1, new ArrayList<RegionBlock>());
 					in &= cont.size() > 0;
 				}
 			}
 			if(in){
 				curExon = exons.get(exons.size()-1);
-				cont = regions.getIntervalsBeginAt(curExon.getStart(), new ArrayList<Region>());
+				cont = this.exons.getIntervalsBeginAt(curExon.getStart(), new ArrayList<RegionBlock>());
 				if(cont.size() > 0){
 					in &= cont.get(0).getStop() >= curExon.getStop()-1;
 				}
@@ -143,7 +148,7 @@ public class Transcript extends RegionVector{
 			}
 		}
 		else{
-			cont = regions.getIntervalsSpanning(curExon.getStart(),curExon.getStop()-1, new ArrayList<Region>());
+			cont = this.exons.getIntervalsSpanning(curExon.getStart(),curExon.getStop()-1, new ArrayList<RegionBlock>());
 			in &= cont.size() > 0;
 		}
 		return in;

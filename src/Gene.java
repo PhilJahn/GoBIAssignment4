@@ -33,9 +33,12 @@ public class Gene extends Region{
 	
 	private HashMap<String,Transcript> transcripts;
 	
+	private HashSet<String> transReadIds;
+	
 	public Gene(int x1, int x2, Annotation annotation){
 		super(x1,x2,annotation);
 		transcripts = new HashMap <String,Transcript>();
+		transReadIds = new  HashSet<String>();
 	}
 
 //	public Gene(int x1, int x2, Annotation annotation, Annotation subannotation){
@@ -218,7 +221,7 @@ public class Gene extends Region{
 	}
 	
 	public String toString(){
-		String output = "Gene: "+ super.toString() + "\n";
+		String output = "Gene: " + this.getAnnotation().getId() + " " + super.toString() + "\n";
 		for( String k : transcripts.keySet() ){
 			output += transcripts.get(k).toString();
 		}
@@ -236,20 +239,28 @@ public class Gene extends Region{
 	        return x1.getStart() - x2.getStart();
 	    }
 	}
+	
+	public HashSet<String> getTransReadIds(){
+		return transReadIds;
+	}
 
 	public boolean inTranscript(Read curRead) {
 		boolean transcriptomic = false;
-		if(curRead.getReadName().equals("135")){
-			System.out.println("135");
-		}
+//		if(curRead.getReadName().equals("711")){
+//			System.out.println("711");
+//		}
 		for( String k : transcripts.keySet() ){
 			if(!transcriptomic){
 				transcriptomic |= transcripts.get(k).inTranscript(curRead);
 			}
 		}
-		if(curRead.getReadName().equals("135")){
-			System.out.println(transcriptomic);
+//		if(curRead.getReadName().equals("711")){
+//			System.out.println(transcriptomic);
+//		}
+		if(transcriptomic){
+			this.transReadIds.add(curRead.getReadName());
 		}
+		
 		return transcriptomic;
 	}
 }

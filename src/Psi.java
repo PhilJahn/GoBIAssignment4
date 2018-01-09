@@ -137,6 +137,7 @@ public class Psi {
 	        				cdsAnno = new Annotation(id,chr,strand,super_id,super_super_id,type,gene_name);
 	        				mapAnno.put(id+super_id+super_super_id,cdsAnno);
 	        			}
+	        			curCAnno = cdsAnno;
 	        		}
 	        		cds = new Region(start,stop,cdsAnno);
 	        		
@@ -168,6 +169,59 @@ public class Psi {
 	        		}
 	        		
 	        	}
+	        	if(lineSplit[2].equals("exon")){
+	        		attr = getAttributes(attrSplit);
+	        		String super_super_id = attr.get("gene_id");
+	        		String gene_name = attr.get("gene_name");
+	        		String super_id = attr.get("transcript_id");
+	        		String id = attr.get("protein_id");
+	        		String type = lineSplit[1];
+	        		char strand = lineSplit[6].charAt(0);
+	        		String chr = lineSplit[0];
+	        		int start = Integer.parseInt(lineSplit[3]);
+	        		int stop = Integer.parseInt(lineSplit[4]);
+	        		RegionBlock exon;
+	        		Annotation exonAnno;
+	        		if(curCAnno != null && curCAnno.getId().equals(id) && curCAnno.getSuperId().equals(super_id) && curCAnno.getSuperSuperId().equals(super_super_id)){
+	        			exonAnno = curCAnno;
+	        		}
+	        		else{
+	        			exonAnno = mapAnno.get(id+super_id+super_super_id);
+	        			if(!(exonAnno != null)){
+	        				exonAnno = new Annotation(id,chr,strand,super_id,super_super_id,type,gene_name);
+	        				mapAnno.put(id+super_id+super_super_id,exonAnno);
+	        			}
+	        		}
+	        		exon = new RegionBlock(start,stop);
+	        		
+	        		
+	        		if(exonAnno.isSub(curTAnno)){
+	        			curTrans.add(exon);
+	        		}
+	        		else {
+		        		String transcript_name = attr.get("transcript_name");	        			
+		        		Annotation transAnno = new Annotation(super_id,transcript_name,chr,strand,super_super_id,type,gene_name);
+		        		Transcript trans = new Transcript(start,stop,transAnno);
+
+		        		if(transAnno.isSub(curGAnno)){
+		        			curGene.add(trans);
+		        		}
+		        		else{
+		        			System.out.println(transAnno.getSuperId() + " is missing");
+//			        		Annotation geneAnno = new Annotation(super_super_id,gene_name,chr,strand,type);
+//			        		Gene gene = new Gene(start, stop, geneAnno);
+//			        		geneSet.put(gene.hashCode(),gene);
+//			        		curGene = gene;
+//			        		curGAnno = geneAnno;
+//			        		curGene.add(trans);
+		        		}
+		        		
+		        		curTAnno = transAnno;
+		        		curTrans = trans;
+		        		curTrans.add(exon);
+	        		}
+	        	}
+	        	
 	        	else{}
 	        	}
 	        }
@@ -207,18 +261,18 @@ public class Psi {
 	    
 	    this.setReadTree(bam_reader);
 	    
-	    System.out.println(geneTree.keySet().toString());
-	    
-	    for(String chr : geneTree.keySet()){
-	    	System.out.println(geneTree.get(chr).keySet().toString());
-	    	for(char str: geneTree.get(chr).keySet()){
-	    		if(readTree.containsKey(chr)){
-		    		if(readTree.get(chr).containsKey(str)){
-		    			System.out.println(geneTree.get(chr).get(str).size() + " : " + readTree.get(chr).get(str).size());
-		    		}
-	    		}
-	    	}
-	    }
+//	    System.out.println(geneTree.keySet().toString());
+//	    
+//	    for(String chr : geneTree.keySet()){
+//	    	System.out.println(geneTree.get(chr).keySet().toString());
+//	    	for(char str: geneTree.get(chr).keySet()){
+//	    		if(readTree.containsKey(chr)){
+//		    		if(readTree.get(chr).containsKey(str)){
+//		    			System.out.println(geneTree.get(chr).get(str).size() + " : " + readTree.get(chr).get(str).size());
+//		    		}
+//	    		}
+//	    	}
+//	    }
 	    
 //		long stopTime = System.currentTimeMillis();
 //		System.out.println("Input:" + (stopTime-startTime));
@@ -263,11 +317,11 @@ public class Psi {
 //			resultBuilder.append(brk);
 //		}
 		
-		String keyString = "ENSG00000158109.10";
-		int keyInt = keyString.hashCode();
-		Gene gene = geneSet.get(keyInt);
-		geneSet.clear();
-		geneSet.put(keyInt, gene);
+//		String keyString = "ENSG00000259900.1";
+//		int keyInt = keyString.hashCode();
+//		Gene gene = geneSet.get(keyInt);
+//		geneSet.clear();
+//		geneSet.put(keyInt, gene);
 
 		
 		for (Integer key: geneSet.keySet()) {
@@ -282,15 +336,19 @@ public class Psi {
 			char str = curGAnno.getStrand();
 			String chr = curGAnno.getChromosome();
 			
-			resultBuilder.append((curGene.getStart() + " " + curGene.getStop()));
-			resultBuilder.append(brk);
+//			resultBuilder.append((curGene.getStart() + " " + curGene.getStop()));
+//			resultBuilder.append(brk);
 			
 			HashSet<Read> readSet = new HashSet<Read>();
-			readSet = readTree.get(chr).get(str).getIntervalsSpannedBy(curGene.getStart(), curGene.getStop(), readSet);
+			if(readTree.containsKey(chr)){
+	    		if(readTree.get(chr).containsKey(str)){
+	    			readSet = readTree.get(chr).get(str).getIntervalsSpannedBy(curGene.getStart(), curGene.getStop(), readSet);
+	    		}
+			}
+			HashSet<String> readIds = curGene.getTransReadIds();
+	    	IntervalTree<Read> reads = new IntervalTree<Read>(readSet);
 			
-			IntervalTree<Read> reads = new IntervalTree<Read>(readSet);
-			
-			System.out.println(reads.size());
+//			System.out.println(reads.size());
 			
 //			System.out.println(reads.toTreeString());
 			
@@ -302,37 +360,30 @@ public class Psi {
 				for( Region exon : exons){
 					int start = exon.getStart();
 					int stop = exon.getStop()+1;
-					resultBuilder.append(geneid);
-					resultBuilder.append(tab);
-					resultBuilder.append(start);
-					resultBuilder.append(lin);
-					resultBuilder.append(stop);
 					
-					int c1 = 0;
-					int c2 = 0;
-					int d1 = 0;
-					int d2 = 0;
+					int c = 0;
+					int d = 0;
 					int ges = 0;
 					
 					ArrayList<Read> exonReads = new ArrayList<Read>();
 					exonReads = reads.getIntervalsIntersecting(start, stop, exonReads);
 					
-					System.out.println(exonReads.size());
-					
-					resultBuilder.append(brk);
+//					System.out.println(exonReads.size());					
+//					resultBuilder.append(brk);
 					
 					exonReads.sort(new StartReadComparator());
 					
-					int[] incl = new int[]{29,190,170,171,153,175,230,110,111,134,135,157,136,215,216,91,70,31,76,99,56,180,100,200,222,103,169,6,204,107,85,20,64};
-					int[] excl = new int[]{391,260,272,363,253,364,365,277,255,300,388,312,356,346,303,315,338};
-					
-					
-					System.out.println(incl.length + " " + excl.length + " " + (incl.length+excl.length));
-					
+//					int[] incl = new int[]{67102,67144,67100,67145,67106,67105,67108,67109,67187,67184,67114,67111,67078,67079,67117,67116,67190,67072,67074,67124,67201,67168,67089,67122,67123,67128,67129,67206,67080,67083,67084,67081,67164,67087,67121,67088,67162,67086,67135,67133,67134,67139,67137,67138,67090,67095,67093,67131,67098,67132,67099,67130};
+//					int[] excl = new int[]{391,260,272,363,253,364,365,277,255,300,388,312,356,346,303,315,338};
+//					
+//					
+//					System.out.println(incl.length + " " + excl.length + " " + (incl.length+excl.length));
+//					
 					for(Read er : exonReads){
+						if(readIds.contains(er.getReadName())){
 						boolean inincl = false;
-						boolean inexcl = false;
-						resultBuilder.append(er.toString());
+//						boolean inexcl = false;
+//						resultBuilder.append(er.toString());
 						
 						ges++;
 						
@@ -342,44 +393,45 @@ public class Psi {
 						ArrayList<RegionBlock> overl = new ArrayList<RegionBlock>();
 						overl = er.getAlignmentBlocks().getIntervalsSpannedBy(start, stop, overl);
 						
-						resultBuilder.append(tab);						
+//						resultBuilder.append(tab);						
 						if(in.size() > 0){
 							if(overl.size() == in.size()){
-								c1++;
-								resultBuilder.append("incl");
+								c++;
+//								resultBuilder.append("incl");
 							}
-							else{
-								resultBuilder.append("overl");
-							}
+//							else{
+//								resultBuilder.append("overl");
+//							}
 						}
 						else{
-							d1++;
-							resultBuilder.append("excl");
+							d++;
+//							resultBuilder.append("excl");
 						}
 						
-						for(int id : incl){
-							if(er.getReadName().equals("" + id)){
-								inincl = true;
-							}
-						}
-						for(int id : excl){
-							if(er.getReadName().equals("" + id)){
-								inexcl = true;
-							}
-						}
-						
-						if(inincl){
-							resultBuilder.append(tab);
-							resultBuilder.append("incl");
-						}
-						else if(inexcl){
-							resultBuilder.append(tab);
-							resultBuilder.append("excl");
-						}
-						else{
-							resultBuilder.append(tab);
-							resultBuilder.append("miss");
-						}
+//						for(int id : incl){
+//							if(er.getReadName().equals("" + id)){
+//								inincl = true;
+////								System.out.println("id" + id);
+//							}
+//						}
+//						for(int id : excl){
+//							if(er.getReadName().equals("" + id)){
+//								inexcl = true;
+//							}
+//						}
+//						
+//						if(inincl){
+//							resultBuilder.append(tab);
+//							resultBuilder.append("incl");
+//						}
+//						else if(inexcl){
+//							resultBuilder.append(tab);
+//							resultBuilder.append("excl");
+//						}
+//						else{
+//							resultBuilder.append(tab);
+//							resultBuilder.append("miss");
+//						}
 						
 //						ArrayList<RegionBlock> in1 = new ArrayList<RegionBlock>();
 //						in1 = er.getAlignmentBlocksFoP().getIntervalsSpannedBy(start, stop, in1);
@@ -397,49 +449,34 @@ public class Psi {
 //							d2++;
 //							resultBuilder.append("excl");
 //						}
-						
-						resultBuilder.append(brk);
-						
+//						
+//						resultBuilder.append(brk);
+						}
 					}
 					
-					resultBuilder.append(tab);
-					resultBuilder.append(c1);
+//					if(ges > 0){
+						resultBuilder.append(geneid);
+						resultBuilder.append(tab);
+						resultBuilder.append(start);
+						resultBuilder.append(lin);
+						resultBuilder.append(stop);
 					
-					resultBuilder.append(tab);
-					resultBuilder.append(c2);
+						resultBuilder.append(tab);
+						resultBuilder.append(c);
 					
-					resultBuilder.append(tab);
-					resultBuilder.append(d1);
+						resultBuilder.append(tab);
+						resultBuilder.append(d);
+	
+						resultBuilder.append(tab);
+						resultBuilder.append(ges);
 					
-					resultBuilder.append(tab);
-					resultBuilder.append(d2);
+						double psi = (c+0.0)/ges;
 					
-					resultBuilder.append(tab);
-					resultBuilder.append(ges);
-//					
-//					int e = c-d;
-//					resultBuilder.append(tab);
-//					resultBuilder.append(e);
-//					
-//					resultBuilder.append(tab);
-//					resultBuilder.append(c);
-					
-//					int f = 0;
-//					Iterator<SAMRecord>  exon_iterator_in = bam_reader.query(chr, exon.getStart(), exon.getStop()+1, true);
-//					
-//					ids.clear();
-//					
-//					while(exon_iterator_in.hasNext()){
-//						SAMRecord curRec = exon_iterator_in.next();
-//						if(ids.add(curRec.getReadName())){
-//							f++;
-//						}
+						resultBuilder.append(tab);
+						resultBuilder.append(psi);
+						resultBuilder.append(brk);
 //					}
 					
-//					resultBuilder.append(tab);
-//					resultBuilder.append(f);
-					
-					resultBuilder.append(brk);
 				}
 				
 			}
@@ -448,93 +485,6 @@ public class Psi {
 //		long stopTime = System.currentTimeMillis();
 //		System.out.println("Skips:" + (stopTime-startTime));
 		return resultBuilder.toString();
-	}
-	
-	public void printExonSkip(StringBuilder resultBuilder, Gene curGene, Annotation curGAnno, ArrayList<ExonSkip> skips, String tab, String brk, char sep, char sip){
-
-		//		System.out.println("gotExonSkips");
-		int tn = curGene.getTranscriptNumber();
-		int pn = curGene.getProteinNumber();
-		
-		String geneid = curGAnno.getId();
-		String genename = curGAnno.getName();
-		String chr = curGAnno.getChromosome();
-		char str = curGAnno.getStrand();
-		
-		StringBuilder geneInfo = new StringBuilder(geneid);
-		geneInfo.append(tab);
-		geneInfo.append(genename);
-		geneInfo.append(tab);
-		geneInfo.append(chr);
-		geneInfo.append(tab);
-		geneInfo.append(str);
-		geneInfo.append(tab);
-		geneInfo.append(tn);
-		geneInfo.append(tab);
-		geneInfo.append(pn);
-		geneInfo.append(tab);
-		
-		for(ExonSkip skip: skips){
-			resultBuilder.append(geneInfo);
-			resultBuilder.append(skip.getStart());
-			resultBuilder.append(sep);
-			resultBuilder.append(skip.getStop());
-			resultBuilder.append(tab);
-			
-			ArrayList<Region> introns = new ArrayList<Region>(skip.getWTIntrons());
-			introns.sort(new StartRegionComparator());
-			resultBuilder.append(introns.get(0).getStart());
-			resultBuilder.append(sep);
-			resultBuilder.append(introns.get(0).getStop());
-			for(int i = 1; i < introns.size(); i++ ){
-				Region curIntron = introns.get(i);
-				resultBuilder.append(sip);
-				resultBuilder.append(curIntron.getStart());
-				resultBuilder.append(sep);
-				resultBuilder.append(curIntron.getStop());
-			}
-			resultBuilder.append(tab);
-			
-			ArrayList<Region> exons = new ArrayList<Region>(skip.getWTExons());
-			exons.sort(new StartRegionComparator());
-			resultBuilder.append(exons.get(0).getStart());
-			resultBuilder.append(sep);
-			resultBuilder.append(exons.get(0).getStop());
-			for(int i = 1; i < exons.size(); i++ ){
-				Region curExon = exons.get(i);
-				resultBuilder.append(sip);
-				resultBuilder.append(curExon.getStart());
-				resultBuilder.append(sep);
-				resultBuilder.append(curExon.getStop());
-			}
-			resultBuilder.append(tab);
-			
-			ArrayList<String> wt = new ArrayList<String>(skip.getWTProt());
-			resultBuilder.append(wt.get(0));
-			for(int i = 1; i < wt.size(); i++ ){
-				resultBuilder.append(sip);					
-				resultBuilder.append(wt.get(i));
-			}
-			resultBuilder.append(tab);
-			
-			ArrayList<String> sv = new ArrayList<String>(skip.getSVProt());
-			resultBuilder.append(sv.get(0));
-			for(int i = 1; i < sv.size(); i++ ){
-				resultBuilder.append(sip);					
-				resultBuilder.append(sv.get(i));
-			}
-			resultBuilder.append(tab);
-			
-			resultBuilder.append(skip.getMinEx());
-			resultBuilder.append(tab);
-			resultBuilder.append(skip.getMaxEx());
-			resultBuilder.append(tab);
-			resultBuilder.append(skip.getMinBase());
-			resultBuilder.append(tab);
-			resultBuilder.append(skip.getMaxBase());
-			resultBuilder.append(brk);
-		
-		}
 	}
 	
 	public ArrayList<Gene> getGenes(){
@@ -584,9 +534,11 @@ public class Psi {
 					    
 					    if(contin.size() > 0){
 					    	for(Gene g : contin){
-					    		if(!transcriptomic){
-					    			transcriptomic |= g.inTranscript(curRead);
-					    		}
+//								if(curRead.getReadName().equals("67182")){
+//									System.out.println(g.toString());
+//								}
+					    		
+					    		transcriptomic |= g.inTranscript(curRead);
 					    	}
 					    }
 					    
