@@ -26,6 +26,8 @@ public class Read implements Interval{
 	private ArrayList<RegionBlock> exons_fop;
 	private ArrayList<RegionBlock> exons_sop;
 	
+	
+	
 	private ArrayList<RegionBlock> introns;
 	
 	public Read(SAMRecord samRecord1, SAMRecord samRecord2) {
@@ -99,7 +101,9 @@ public class Read implements Interval{
 		for(int i =1 ; i < exons_sop.size(); i++){
 			int start = exons_sop.get(i-1).getStop();
 			int stop = exons_sop.get(i).getStart();
-			introns.add(new RegionBlock(start+1,stop));
+			if(start < stop){
+				introns.add(new RegionBlock(start+1,stop));
+			}
 		}
 		
 		IntervalTree<RegionBlock> exons = new IntervalTree<RegionBlock>();
@@ -141,8 +145,42 @@ public class Read implements Interval{
 			int start = overlapArray[0].getStart();
 			int stop = overlapArray[overlapArray.length-1].getStop();
 			
-			alignment_blocks.add(new RegionBlock(start,stop));
+			RegionBlock newblock = new RegionBlock(start,stop);
+			alignment_blocks.add(newblock);
 		}
+		
+		IntervalTree<RegionBlock> exons_fop_tree = new IntervalTree<RegionBlock>(exons_fop);
+		exons_fop.clear();
+		Iterator<Set<RegionBlock>> exon_fop_it = exons_fop_tree.groupIterator();
+		while(exon_fop_it.hasNext()){
+			Set<RegionBlock> overlap = exon_fop_it.next();
+			RegionBlock[] overlapArray = new RegionBlock[overlap.size()];
+			overlapArray = overlap.toArray(overlapArray);
+			Arrays.sort(overlapArray,new RegionBlockComparator());
+			int start = overlapArray[0].getStart();
+			int stop = overlapArray[overlapArray.length-1].getStop();
+			
+			RegionBlock newblock = new RegionBlock(start,stop);
+			exons_fop.add(newblock);
+		}
+		
+		IntervalTree<RegionBlock> exons_sop_tree = new IntervalTree<RegionBlock>(exons_sop);
+		exons_sop.clear();
+		Iterator<Set<RegionBlock>> exon_sop_it = exons_sop_tree.groupIterator();
+		while(exon_sop_it.hasNext()){
+			Set<RegionBlock> overlap = exon_sop_it.next();
+			RegionBlock[] overlapArray = new RegionBlock[overlap.size()];
+			overlapArray = overlap.toArray(overlapArray);
+			Arrays.sort(overlapArray,new RegionBlockComparator());
+			int start = overlapArray[0].getStart();
+			int stop = overlapArray[overlapArray.length-1].getStop();
+			
+			RegionBlock newblock = new RegionBlock(start,stop);
+			exons_sop.add(newblock);
+		}
+		
+		
+		
 //		if(incons){
 //			System.out.println(readname);
 //			System.out.println("FoP: " + exons_fop.toString());

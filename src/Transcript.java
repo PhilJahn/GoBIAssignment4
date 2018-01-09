@@ -74,38 +74,37 @@ public class Transcript extends RegionVector{
 		ArrayList<RegionBlock> exonssop = curRead.getAlignmentBlocksSoP();
 		ArrayList<RegionBlock> intronsR = curRead.getIntronBlocks();
 		
-//		if(curRead.getReadName().equals("67182")){
-//			System.out.println("67182");
+//		if(curRead.getReadName().equals("7075")){
+//			System.out.println("7075");
 //			System.out.println(this.exons.toString());
 //			System.out.println("FOP " + exonsfop.toString());
 //			System.out.println("SOP " +exonssop.toString());
 //			System.out.println("Intron " +intronsR.toString());
 //		}
-		
+//		
 		in = inTranscriptExon(exonsfop);
-//		if(curRead.getReadName().equals("67182")){
+//		if(curRead.getReadName().equals("7075")){
 //			System.out.println("FOP " + in);
 //		}
 		if(in){
 			in = inTranscriptExon(exonssop);
-//			if(curRead.getReadName().equals("67182")){
+//			if(curRead.getReadName().equals("7075")){
 //				System.out.println("SOP " + in);
 //			}
 		}
-		
 		
 		if(in && intronsR.size() > 0){
 			HashSet<RegionBlock> cont;
 			for(RegionBlock intron: intronsR){
 				cont = exons.getIntervalsSpannedBy(intron.getStart()-1,intron.getStop()-1, new HashSet<RegionBlock>());
 				if(cont.size() != 0){
-//					if(curRead.getReadName().equals("67182")){
+//					if(curRead.getReadName().equals("7075")){
 //						System.out.println("Intron " + false);
 //					}
 					return false;
 				}
 			}
-//			if(curRead.getReadName().equals("67182")){
+//			if(curRead.getReadName().equals("7075")){
 //				System.out.println("Intron " + in);
 //			}
 		}

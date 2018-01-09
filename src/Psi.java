@@ -317,7 +317,7 @@ public class Psi {
 //			resultBuilder.append(brk);
 //		}
 		
-//		String keyString = "ENSG00000259900.1";
+//		String keyString = "ENSG00000143839.12";
 //		int keyInt = keyString.hashCode();
 //		Gene gene = geneSet.get(keyInt);
 //		geneSet.clear();
@@ -374,15 +374,25 @@ public class Psi {
 					exonReads.sort(new StartReadComparator());
 					
 //					int[] incl = new int[]{67102,67144,67100,67145,67106,67105,67108,67109,67187,67184,67114,67111,67078,67079,67117,67116,67190,67072,67074,67124,67201,67168,67089,67122,67123,67128,67129,67206,67080,67083,67084,67081,67164,67087,67121,67088,67162,67086,67135,67133,67134,67139,67137,67138,67090,67095,67093,67131,67098,67132,67099,67130};
-//					int[] excl = new int[]{391,260,272,363,253,364,365,277,255,300,388,312,356,346,303,315,338};
+//					int[] excl = new int[]{7022,7043,6991,6971,6970,6896,6929,6909,7019,6941,6988,6987,6924,6926,6947,7010,7153,6980,7034,7015,6984,7075,7030,6916,6974,6996,6930,6977,6976,7229,6978,6937,6914};
+//					int[] almexcl = new int[]{7043,6980,6977,6987,6991,7034,7010,6971,7019,6924,6976,7015,6916,6974,6978,6970,6926,6947,7229,6896,6929,7153,6909,7022,6914,6988,6984,6941,7030,6996,6937,6930};
+//
+//					HashSet<Integer> exclSet = new HashSet<Integer>();
+//					for(int i = 0; i < excl.length; i++){
+//						exclSet.add(excl[i]);
+//					}
+//					for(int i = 0; i < almexcl.length; i++){
+//						exclSet.remove(almexcl[i]);
+//					}
 //					
-//					
+//					System.out.println(exclSet.toString());
+					
 //					System.out.println(incl.length + " " + excl.length + " " + (incl.length+excl.length));
 //					
 					for(Read er : exonReads){
 						if(readIds.contains(er.getReadName())){
 						boolean inincl = false;
-//						boolean inexcl = false;
+						boolean inexcl = false;
 //						resultBuilder.append(er.toString());
 						
 						ges++;
@@ -417,6 +427,7 @@ public class Psi {
 //						for(int id : excl){
 //							if(er.getReadName().equals("" + id)){
 //								inexcl = true;
+//								System.out.print("," + id);
 //							}
 //						}
 //						
@@ -424,7 +435,7 @@ public class Psi {
 //							resultBuilder.append(tab);
 //							resultBuilder.append("incl");
 //						}
-//						else if(inexcl){
+//						if(inexcl){
 //							resultBuilder.append(tab);
 //							resultBuilder.append("excl");
 //						}
@@ -432,29 +443,12 @@ public class Psi {
 //							resultBuilder.append(tab);
 //							resultBuilder.append("miss");
 //						}
-						
-//						ArrayList<RegionBlock> in1 = new ArrayList<RegionBlock>();
-//						in1 = er.getAlignmentBlocksFoP().getIntervalsSpannedBy(start, stop, in1);
-//						
-//						ArrayList<RegionBlock> in2 = new ArrayList<RegionBlock>();
-//						in2 = er.getAlignmentBlocksSoP().getIntervalsSpannedBy(start, stop, in2);
-//						
-//						resultBuilder.append(tab);
-//						
-//						if(in1.size() > 0 || in2.size() > 0){
-//							c2++;
-//							resultBuilder.append("incl");
-//						}
-//						else{
-//							d2++;
-//							resultBuilder.append("excl");
-//						}
 //						
 //						resultBuilder.append(brk);
 						}
 					}
 					
-//					if(ges > 0){
+					if(ges > 0){
 						resultBuilder.append(geneid);
 						resultBuilder.append(tab);
 						resultBuilder.append(start);
@@ -475,7 +469,7 @@ public class Psi {
 						resultBuilder.append(tab);
 						resultBuilder.append(psi);
 						resultBuilder.append(brk);
-//					}
+					}
 					
 				}
 				
@@ -534,7 +528,7 @@ public class Psi {
 					    
 					    if(contin.size() > 0){
 					    	for(Gene g : contin){
-//								if(curRead.getReadName().equals("67182")){
+//								if(curRead.getReadName().equals("7075")){
 //									System.out.println(g.toString());
 //								}
 					    		

@@ -254,7 +254,7 @@ public class Gene extends Region{
 				transcriptomic |= transcripts.get(k).inTranscript(curRead);
 			}
 		}
-//		if(curRead.getReadName().equals("711")){
+//		if(curRead.getReadName().equals("7075")){
 //			System.out.println(transcriptomic);
 //		}
 		if(transcriptomic){
